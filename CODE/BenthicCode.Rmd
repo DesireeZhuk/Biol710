@@ -1,0 +1,35 @@
+---
+title: "Final Project Code"
+author: "Desiree"
+date: "`r Sys.Date()`"
+output: openintro::lab_report
+---
+
+```{r load-packages, message=FALSE}
+library(tidyverse)
+library(openintro)
+library(plyr)
+
+# Importing data
+benthic <- read.csv("marsh.csv",header=TRUE)
+# viewing the data
+marsh
+
+summary(marsh)
+
+```
+
+```{r load-packages, message=FALSE}
+
+#The simplest measure of species richness is just the number of species recorded per site. That is, the number of species that have more than one individual recorded.
+ddply(data,~Sites,function(x) {data.frame(RICHNESS=sum(x[-1]>0))})
+
+
+#Another measure of a community is the total abundance of individuals present (per area).
+ddply(data,~Sites,function(x) {data.frame(ABUNDANCE=sum(x[-1]))})
+
+#Brillouin Index (HB) is a modification of the Shannon-Wiener Index that is preferred when sample randomness cannot be guaranteed.
+ddply(data,~Sites,function(x) {data.frame(BRILLOUIN=brillouin(x[-1]))})
+```
+...
+
