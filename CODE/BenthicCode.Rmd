@@ -9,27 +9,61 @@ output: openintro::lab_report
 library(tidyverse)
 library(openintro)
 library(plyr)
+library(naniar)
+library(vegan)
 
 # Importing data
-benthic <- read.csv("marsh.csv",header=TRUE)
+benthic <- read.csv("FakeBenthicDataset.csv",header=TRUE)
 # viewing the data
-marsh
+benthic
 
-summary(marsh)
+summary(benthic)
+
+```
+```{r}
+# change - to NA
+benthic$Carapace.Length..mm._NA <- gsub("-", 0, benthic$Carapace.Length..mm.) %>% as.numeric() %>% tidyr::replace_na(0)
+benthic$Shell.Length_NA <- gsub("-", 0, benthic$Shell.Length) %>% as.numeric() %>% tidyr::replace_na(0)
+benthic$Worm.Length_NA <- gsub("-", 0, benthic$Worm.Length) %>% as.numeric() %>% tidyr::replace_na(0)
+
+benthic %>% naniar::replace_with_na(replace = list(x = 0))
+```
+
+```{r filtering}
+
+#The simplest measure of species richness is just the number of species recorded per site. That is, the number of species that have more than one individual recorded.
+#ddply(benthic,~Location,function(x) {data.frame(RICHNESS=sum(x[-1]>0))})
+
+#mean carapace length per species per location
+benthic %>% group_by(Location,Species) %>% dplyr::summarise(mean = mean(as.numeric(Carapace.Length..mm._NA))) -> test
+```
+
+```{r richness}
+#counting species richness per location
+richness <- dplyr::count(test, Location)
+richness
+
+ggplot(richness, aes(x=Location, y=n)) +
+  geom_point() + 
+  geom_segment( aes(x=Location, xend=Location, y=0, yend=n))
+```
+```{r count}
+
+numspecies <- benthic %>% dplyr::count (Location, Species)
 
 ```
 
-```{r load-packages, message=FALSE}
+```{r long_data}
 
-#The simplest measure of species richness is just the number of species recorded per site. That is, the number of species that have more than one individual recorded.
-ddply(data,~Sites,function(x) {data.frame(RICHNESS=sum(x[-1]>0))})
+data_wide <- spread(numspecies, Species, n)
+data_wide
 
+```
 
-#Another measure of a community is the total abundance of individuals present (per area).
-ddply(data,~Sites,function(x) {data.frame(ABUNDANCE=sum(x[-1]))})
+```{r diversity}
+#shannon diversity test on species present
+ddply(data,~Sites,function(x) {data.frame(SHANNON=diversity(x[-1], index="shannon"))})
 
-#Brillouin Index (HB) is a modification of the Shannon-Wiener Index that is preferred when sample randomness cannot be guaranteed.
-ddply(data,~Sites,function(x) {data.frame(BRILLOUIN=brillouin(x[-1]))})
 ```
 ...
 
