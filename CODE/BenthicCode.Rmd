@@ -11,6 +11,8 @@ library(openintro)
 library(plyr)
 library(naniar)
 library(vegan)
+library(ggpubr)
+library(labdsv)
 
 # Importing data
 benthic <- read.csv("FakeBenthicDataset.csv",header=TRUE)
@@ -45,7 +47,11 @@ richness
 
 ggplot(richness, aes(x=Location, y=n)) +
   geom_point() + 
-  geom_segment( aes(x=Location, xend=Location, y=0, yend=n))
+  geom_segment( aes(x=Location, xend=Location, y=0, yend=n)) +
+  theme(legend.position = "none") +
+  labs(x = "Data Collection Site",
+       y = "Species Richness",
+       title = "Species Richness Per Site")
 ```
 ```{r count}
 
@@ -58,12 +64,35 @@ numspecies <- benthic %>% dplyr::count (Location, Species)
 data_wide <- spread(numspecies, Species, n)
 data_wide
 
+data_wide[is.na(data_wide)] <- 0
+
+```
+
+```{r row_names}
+
+rownames(data_wide) <- data_wide$Location
+data_wide$Location <- NULL
+
 ```
 
 ```{r diversity}
+
 #shannon diversity test on species present
-ddply(data,~Sites,function(x) {data.frame(SHANNON=diversity(x[-1], index="shannon"))})
+shannon <- diversity(data_wide,index = "shannon") %>% as.data.frame()
+shannon$Location <- rownames(shannon)
+```
+
+```{r plot_shannon}
+
+plot_shandiv <- ggplot(shannon, aes(x = Location, y = ., fill = Location)) +
+  geom_col(color = "black") +
+  theme(legend.position = "none") +
+  labs(x = "Data Collection Site",
+       y = "Mean Shannon Diversity",
+       title = "Shannon Diversity Per Site")
+plot_shandiv
 
 ```
+
 ...
 
