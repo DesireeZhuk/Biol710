@@ -1,10 +1,3 @@
----
-title: "Final Project Code"
-author: "Desiree"
-date: "`r Sys.Date()`"
-output: openintro::lab_report
----
-
 ```{r load-packages, message=FALSE}
 library(tidyverse)
 library(openintro)
@@ -33,11 +26,30 @@ benthic %>% naniar::replace_with_na(replace = list(x = 0))
 
 ```{r filtering}
 
-#The simplest measure of species richness is just the number of species recorded per site. That is, the number of species that have more than one individual recorded.
-#ddply(benthic,~Location,function(x) {data.frame(RICHNESS=sum(x[-1]>0))})
-
 #mean carapace length per species per location
-benthic %>% group_by(Location,Species) %>% dplyr::summarise(mean = mean(as.numeric(Carapace.Length..mm._NA))) -> test
+benthic %>% group_by(Location,Species) %>% dplyr::summarise(mean = mean(as.numeric(Carapace.Length..mm._NA))) -> carapace
+
+#mean shell length per species per location
+benthic %>% group_by(Location,Species) %>% dplyr::summarise(mean = mean(as.numeric(Shell.Length_NA))) -> shell
+
+#mean worm length per species per location
+benthic %>% group_by(Location,Species) %>% dplyr::summarise(mean = mean(as.numeric(Worm.Length_NA))) -> worm
+```
+
+```{r frequency_histograms}
+
+#carapace_hist <- ggplot(carapace,aes(x=mean)) +
+  geom_histogram() 
+#carapace_hist
+
+#shell_hist <- ggplot(shell,aes(x=mean)) +
+  geom_histogram() 
+#shell_hist
+
+#worm_hist <- ggplot(worm,aes(x=mean)) +
+  geom_histogram() 
+#worm_hist
+
 ```
 
 ```{r richness}
@@ -53,11 +65,54 @@ ggplot(richness, aes(x=Location, y=n)) +
        y = "Species Richness",
        title = "Species Richness Per Site")
 ```
+Figure 1: Calculated species richness per site. 5 for Castro Cove, 4 for Pinole Shores, 9 for Point Pinole, 5 for Point San Pablo. and 10 for Richardson Bay.
+
 ```{r count}
 
 numspecies <- benthic %>% dplyr::count (Location, Species)
+numspecies
+```
+
+```{r count_graphs}
+
+count_graph <- ggplot(data=(benthic %>% group_by(Location))) +
+  geom_bar(aes(x=Location, fill=Species), stat = "count") +
+  labs(x = "Location",
+       y = "Number of individuals",
+       title = "Species Recorded Per Site") +
+  theme_classic(18) +
+  theme(axis.text.x = element_text(angle = 90))
+count_graph
+```
+Figure 2: Number of different species found within each site.
+
+```{r filter_by_group}
+
+benthic <- benthic %>% mutate(Class = case_when(Species == "Cancer productus" ~ "Crab",
+                                     Species == "Hemigrapsus nudus" ~ "Crab",
+                                     Species == "Metacarcinus gracilis" ~ "Crab",
+                                     Species == "Metacarcinus magister" ~ "Crab",
+                                     Species == "Hemigrapsus oregonensis" ~ "Crab",
+                                     Species == "Pachygrapsus crassipes" ~ "Crab",
+                                     Species == "Ostrea lurida" ~ "Bivalve",
+                                     Species == "Gemma gemma" ~ "Bivalve",
+                                     Species == "Leptocottus armatus" ~ "Fish",
+                                     Species == "Sipuncula spp." ~ "Worm"))
+```
+
+```{r graph_by_group}
+
+group_graph <- ggplot(data=(benthic %>% group_by(Location))) +
+  geom_bar(aes(x=Location, fill=Class), stat = "count") +
+  labs(x = "Location",
+       y = "Number of individuals",
+       title = "Animals Recorded Per Site") +
+  theme_classic(18) +
+  theme(axis.text.x = element_text(angle = 90))
+group_graph
 
 ```
+Figure 3: Number of individuals within three generalized groups of animals (Bivalve, Crab, Fish, and Worm) found within each site.
 
 ```{r long_data}
 
@@ -93,6 +148,9 @@ plot_shandiv <- ggplot(shannon, aes(x = Location, y = ., fill = Location)) +
 plot_shandiv
 
 ```
+Figure 4: Calculated Shannon diversity per site. 1.6 for Castro Cove, 1.2 for Pinole Shores, 2.1 for Point Pinole, 1.6 for Point San Pablo. and 2.2 for Richardson Bay.
 
+### Analysis
+
+In this fake dataset for San Francisco Bay crabtrap and pitfall trap study, Richardson Bay seems to be the most robust site for species. Richardson Bay scores the highest in calculated species richness at a value of 10, has the most individuals captured at 23 total, has all 4 groups of animals present (Bivalve, Crab, Fish and Worm), and has the highest Shannon diversity index of 2.2. This is followed by Point Pinole, Castro Cove, Point San Pablo, and finally at Pinole Shores being the least. These findings are interesting, as Point Pinole and Pinole Shores are alongside one another but have vastly different species richness and diversity indexes. Richardson Bay is on the west side of the bay while the rest are on the east coast, possibly explaining the discrepancy between the sites. Most likely, differences in the habitat makeup at each site plays a more important role than location of the site within San Francisco Bay. Further study on the habitat composition at each site is needed for more conclusive results in analysis.
 ...
-
